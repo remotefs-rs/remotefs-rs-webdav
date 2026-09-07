@@ -191,6 +191,7 @@ impl RemoteFs for WebDAVFs {
 
         Ok(response
             .into_iter()
+            .filter(|d| d.path() != path)
             .map(resource_to_file)
             .collect::<Vec<_>>())
     }
@@ -333,6 +334,8 @@ impl RemoteFs for WebDAVFs {
 }
 
 fn resource_to_file(resource: Resource) -> File {
+    debug!("converting resource to file: {resource:?}");
+
     File {
         path: PathBuf::from(resource.path()),
         metadata: Metadata {
