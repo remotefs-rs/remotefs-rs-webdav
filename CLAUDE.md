@@ -51,11 +51,13 @@ client implementation providing WebDAV access, as specified in
 (`src/lib.rs`, crate name `remotefs_webdav`) with no binaries or examples.
 
 - **One client.** `WebDAVFs` in `src/lib.rs` implements `remotefs::RemoteFs`
-  over `rustydav`'s blocking HTTP client. WebDAV has no notion of streaming
+  over `DavClient` in `src/client.rs`, a thin blocking `reqwest` wrapper
+  exposing only the verbs the filesystem needs (`GET`, `PUT`, `DELETE`,
+  `MKCOL`, `MOVE`, `PROPFIND`). WebDAV has no notion of streaming
   reads/writes or of POSIX metadata, so `append`, `create`, `open`, `setstat`,
   `symlink`, `copy`, and `exec` all return
   `RemoteErrorType::UnsupportedFeature`.
-- **Response parsing.** `src/parser.rs` wraps a `rustydav` `Response` and turns
+- **Response parsing.** `src/parser.rs` wraps a `reqwest` `Response` and turns
   a PROPFIND multistatus body into `remotefs::File` entries, mapping HTTP
   status codes onto `RemoteErrorType` values.
 - **Vendored `webdav-xml`.** `src/webdav_xml/` is a vendored copy of the
