@@ -1,27 +1,82 @@
 # Changelog
 
-- [Changelog](#changelog)
-  - [0.2.0](#020)
-  - [0.1.1](#011)
-  - [0.1.0](#010)
+All notable changes to this project are documented in this file.
 
----
+## 0.2.1
+
+Released on 2026-09-07
+
+### Changed
+
+- make the crate clippy-clean
+
+> Collapse a nested `if let` into a let chain, build test metadata with
+> struct update syntax instead of assigning fields after
+> `Default::default()`, take the first list entry with `first()`, and use
+> named format placeholders in the parser log line.
+>
+> Rename the `mod.rs` files of the vendored `webdav_xml` tree to the
+> `module_name.rs` layout, and move its `dead_code` allowance to the module
+> root: the vendored copy deliberately keeps upstream's full element and
+> property set even though the client reads only a subset of it.
+
+- replace rustydav with a reqwest client
+
+> rustydav is GPL-3.0, which is incompatible with this crate's MIT
+> license, and its last release pins reqwest 0.11, pulling in the h2
+> unbounded DATA frame advisory (RUSTSEC-2025-0037) and the unmaintained
+> rustls-pemfile (RUSTSEC-2025-0134). The crate has had no release since
+> 0.1.3, so there is nothing to upgrade to.
+>
+> `src/client.rs` replaces it with `DavClient`, a blocking reqwest wrapper
+> exposing only the verbs the filesystem needs: GET, PUT, DELETE, MKCOL,
+> MOVE and PROPFIND. rustydav was never part of the public API, so the
+> change is internal; behaviour is unchanged and the container-backed
+> suite passes against the same server. `cargo deny` is now clean.
+>
+> reqwest 0.13 defaults to rustls, so the crate no longer needs a system
+> OpenSSL to build.
+
+### Fixed
+
+- test is sync and send
+
+### Build
+
+- **deps:** update dependencies, MSRV and edition
+
+> Move the crate to edition 2024 with a 1.94.1 MSRV, and bump every
+> dependency to its current release: thiserror 2, quick-xml 0.42,
+> nonempty 0.12 and serial_test 4.
+>
+> quick-xml 0.42 works on `&str` instead of `&[u8]` and reports entity and
+> character references as separate `GeneralRef` events, so the vendored
+> webdav-xml reader now resolves those references and concatenates the
+> pieces of a split text node. Text containing an escaped `&` used to be
+> truncated at the escape; it is now read in full, covered by a new parser
+> test.
+>
+> Drop the unused `github-actions` feature and declare docs.rs metadata.
+
+### Style
+
+- format the tree with dprint
 
 ## 0.2.0
 
-Released on 30/09/2024
+Released on 2024-09-30
 
-- bump `remotefs` to `0.3.0`
+### Added
 
-## 0.1.1
+- lib implementation
+- remotefs 0.3
 
-Released on 02/03/2024
+### Fixed
 
-- Temporarily included a custom version of webdav-xml inside the project to fix proplist response parser
-  - Follow up <https://github.com/d-k-bo/webdav-rs/pull/1>
-
-## 0.1.0
-
-Released on 02/03/2024
-
-- First release
+- ci and docs
+- ci
+- unused tempfile
+- docs
+- temporarly included webdav-xml into project to fix parsing issues
+- badge
+- ci
