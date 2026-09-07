@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented in this file.
 
+## 0.2.2
+
+Released on 2026-09-07
+
+### Build
+
+- migrate webdav client to `dav-xml` and `dav-xml-client` crates. (#2)
+
+> - build: migrate webdav client to `dav-xml` and `dav-xml-client` crates.
+> - fix: ignore self-dir when listing entries
+
 ## 0.2.1
 
 Released on 2026-09-07
