@@ -12,6 +12,7 @@ changelog version:
 # Tag a version and create a GitHub release with the changelog section as notes. Does not publish to crates.io.
 [group('changelog')]
 gh_release version:
+  notes="$(just changelog_preview {{ version }})"
   git tag "v{{ version }}"
   git push origin "v{{ version }}"
-  just changelog_preview {{ version }} | gh release create "v{{ version }}" --title "v{{ version }}" --notes-file -
+  echo "$notes" | gh release create "v{{ version }}" --title "v{{ version }}" --notes-file -
