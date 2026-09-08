@@ -2,6 +2,29 @@
 
 All notable changes to this project are documented in this file.
 
+## 0.3.0
+
+Released on 2026-09-08
+
+### Breaking changes
+
+- **auth:** accept a generic Auth method in WebDAVFs::new
+
+> WebDAVFs::new(url, auth) replaces WebDAVFs::new(username, password, url).
+
+### Added
+
+- Breaking: **auth:** accept a generic Auth method in WebDAVFs::new
+
+> Bump dav-xml and dav-xml-client to 0.2 and drop the now-unneeded direct
+> ureq dependency. WebDAVFs::new now takes the base url and a dav_xml_client::Auth
+> value instead of separate username/password arguments, letting callers pick
+> any auth scheme the client supports rather than basic auth only.
+>
+> Also fix the with-containers test client to authenticate with the container's
+> configured credentials instead of the placeholder ones shared with the plain
+> unit tests.
+
 ## 0.2.2
 
 Released on 2026-09-07
