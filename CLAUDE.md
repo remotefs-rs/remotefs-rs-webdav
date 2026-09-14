@@ -34,11 +34,12 @@ just publish "--dry-run --allow-dirty"
 `just check` is the required gate before declaring work done. It chains
 `fmt_check`, Clippy with warnings denied, `doc`, `deny`, and `test`.
 
-Most of the tests in `src/lib.rs` are gated behind the `with-containers`
-feature and need the WebDAV container from `tests/docker-compose.yml` running
-locally. Start it with `just containers_up`, then run
-`just test "--features with-containers"`. The tests in `src/parser.rs` and the
-non-gated tests in `src/lib.rs` are plain unit tests and need no container.
+The tests in `src/client/container_tests.rs` are gated behind the
+`with-containers` feature and need the WebDAV container from
+`tests/docker-compose.yml` running locally. Start it with `just containers_up`,
+then run `just test "--features with-containers,tokio"`. The mock-transport
+unit tests in `src/client.rs`, `src/stream.rs`, `src/error.rs`,
+`src/resource.rs`, and `src/url.rs` need no container.
 
 If a required tool is missing, say so. Never claim a check passed or silently
 swap in a weaker command.
@@ -50,23 +51,18 @@ client implementation providing WebDAV access, as specified in
 [RFC 4918](https://www.rfc-editor.org/rfc/rfc4918). It is a library-only crate
 (`src/lib.rs`, crate name `remotefs_webdav`) with no binaries or examples.
 
-- **One client.** `WebDAVFs` in `src/lib.rs` implements `remotefs::RemoteFs`
-  over `DavClient` in `src/client.rs`, a thin blocking `reqwest` wrapper
-  exposing only the verbs the filesystem needs (`GET`, `PUT`, `DELETE`,
-  `MKCOL`, `MOVE`, `PROPFIND`). WebDAV has no notion of streaming
-  reads/writes or of POSIX metadata, so `append`, `create`, `open`, `setstat`,
-  `symlink`, `copy`, and `exec` all return
-  `RemoteErrorType::UnsupportedFeature`.
-- **Response parsing.** `src/parser.rs` wraps a `reqwest` `Response` and turns
-  a PROPFIND multistatus body into `remotefs::File` entries, mapping HTTP
-  status codes onto `RemoteErrorType` values.
-- **Vendored `webdav-xml`.** `src/webdav_xml/` is a vendored copy of the
-  [`webdav-xml`](https://codeberg.org/d-k-bo/webdav-xml) crate (MIT OR
-  Apache-2.0, see `src/webdav_xml/LICENSE-MIT` and
-  `src/webdav_xml/LICENSE-APACHE`), kept in-tree because the published crate
-  mis-parses some server responses. Keep the SPDX headers on every file in
-  that directory, and keep local changes minimal so the fork stays easy to
-  rebase or drop.
+- **One client.** `WebDAVFs<T>` in `src/client.rs` implements
+  `remotefs::AsyncRemoteFs` over `dav_xml_client::AsyncDavClient<T>` (`T`
+  defaults to the reqwest client; `with_transport` accepts any
+  `AsyncTransport`). With the `tokio` feature, `into_blocking` wraps it in
+  `remotefs::adapters::blocking::BlockOn` as `BlockingWebDAVFs`. Paths are
+  absolute; `src/url.rs` validates them and builds URLs.
+- **Transfers.** `src/stream.rs` holds the owned streams: reads are cursors
+  over a downloaded (ranged) body, writes buffer and `PUT` on `finish`.
+- **Errors.** `src/error.rs` maps `dav_xml_client::Error` onto
+  `RemoteErrorType`, keeping the client error as source.
+- **Entries.** `src/resource.rs` converts `PROPFIND` resources into
+  `remotefs::File`.
 - **Command layer.** `Justfile` is a thin importer. Each recipe group lives in
   its own file under `just/` (`build`, `test`, `code_check`, `changelog`,
   `publish`) and carries a `[group(...)]` attribute so `just --list` stays
@@ -87,8 +83,8 @@ client implementation providing WebDAV access, as specified in
 - **CI only runs the container-backed test suite on Linux.**
   `.github/workflows/ci.yml`'s `quality-macos` and `quality-windows` jobs build,
   lint, and run the container-free tests; `quality-linux` starts the
-  `bytemark/webdav` container, runs the `with-containers` suite, and uploads
-  coverage.
+  `bytemark/webdav` container, runs the `find,tokio,with-containers` suite, and
+  uploads coverage.
 
 ## Conventions
 
