@@ -2,6 +2,30 @@
 
 All notable changes to this project are documented in this file.
 
+## 1.0.0
+
+Released on 2026-09-15
+
+### Breaking changes
+
+- migrate to remotefs 1
+
+> `WebDAVFs` now implements `remotefs::AsyncRemoteFs` natively over
+> `dav_xml_client::AsyncDavClient`, and `WebDAVFs::new` returns a
+> `RemoteResult`. Every path must be absolute; `pwd` and `change_dir` are
+> gone. `open` and `create` return owned streams that must be finished
+> explicitly, `read_file` and `write_file` replace `open_file` and
+> `create_file`, `rename` replaces `mov`, and `set_metadata` replaces
+> `setstat`. `copy` is now supported through WebDAV `COPY`. Blocking callers
+> enable the `tokio` feature and call `into_blocking` to obtain a
+> `BlockingWebDAVFs` that implements `remotefs::RemoteFs`.
+
+### Added
+
+- Breaking: migrate to remotefs 1
+- honor read offsets and lengths with HTTP ranges and advertise capabilities
+- `WebDAVFs::with_transport` for caller-configured HTTP transports
+
 ## 0.3.0
 
 Released on 2026-09-08
